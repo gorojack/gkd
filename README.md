@@ -2,6 +2,8 @@
 
 基于 **无障碍** + **高级选择器** + **订阅规则** 的自定义屏幕点击 APP
 
+在原项目的基础上添加了设置文本方法（配合[inspect](https://github.com/gorojack/inspect)使用），该项目仅供个人学习使用
+
 ## 安装
 
 - [gkd.li](https://gkd.li/guide/)
