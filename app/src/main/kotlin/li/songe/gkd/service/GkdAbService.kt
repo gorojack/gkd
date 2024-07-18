@@ -553,7 +553,13 @@ class GkdAbService : CompositionAbService({
             }
 
             return ActionPerformer.getAction(gkdAction.action)
-                .perform(serviceVal, targetNode, gkdAction.position, injectClickEventFc)
+                .perform(
+                    serviceVal,
+                    targetNode,
+                    gkdAction.position,
+                    injectClickEventFc,
+                    gkdAction.args,
+                )
         }
 
 

@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.graphics.Rect
+import android.os.Bundle
 import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import com.blankj.utilcode.util.ScreenUtils
@@ -17,6 +18,7 @@ data class GkdAction(
     val fastQuery: Boolean = false,
     val action: String? = null,
     val position: RawSubscription.Position? = null,
+    val args: String? = null,
 )
 
 @Serializable
@@ -32,14 +34,33 @@ sealed class ActionPerformer(val action: String) {
         node: AccessibilityNodeInfo,
         position: RawSubscription.Position?,
         shizukuClickFc: ((x: Float, y: Float) -> Boolean?)? = null,
+        args: String? = null,
     ): ActionResult
+
+    data object SetText : ActionPerformer("setText") {
+        override fun perform(
+            context: AccessibilityService,
+            node: AccessibilityNodeInfo,
+            position: RawSubscription.Position?,
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
+        ): ActionResult {
+            val arg = Bundle()
+            arg.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, args)
+            return ActionResult(
+                action = action,
+                result = node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arg)
+            )
+        }
+    }
 
     data object ClickNode : ActionPerformer("clickNode") {
         override fun perform(
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             return ActionResult(
                 action = action,
@@ -54,6 +75,7 @@ sealed class ActionPerformer(val action: String) {
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
             shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             val rect = Rect()
             node.getBoundsInScreen(rect)
@@ -90,7 +112,8 @@ sealed class ActionPerformer(val action: String) {
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             if (node.isClickable) {
                 val result = ClickNode.perform(context, node, position)
@@ -107,7 +130,8 @@ sealed class ActionPerformer(val action: String) {
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             return ActionResult(
                 action = action,
@@ -121,7 +145,8 @@ sealed class ActionPerformer(val action: String) {
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             val rect = Rect()
             node.getBoundsInScreen(rect)
@@ -156,7 +181,8 @@ sealed class ActionPerformer(val action: String) {
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             if (node.isLongClickable) {
                 val result = LongClickNode.perform(context, node, position)
@@ -173,7 +199,8 @@ sealed class ActionPerformer(val action: String) {
             context: AccessibilityService,
             node: AccessibilityNodeInfo,
             position: RawSubscription.Position?,
-            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?
+            shizukuClickFc: ((x: Float, y: Float) -> Boolean?)?,
+            args: String?,
         ): ActionResult {
             return ActionResult(
                 action = action,
@@ -184,7 +211,16 @@ sealed class ActionPerformer(val action: String) {
 
     companion object {
         private val allSubObjects by lazy {
-            arrayOf(ClickNode, ClickCenter, Click, LongClickNode, LongClickCenter, LongClick, Back)
+            arrayOf(
+                SetText,
+                ClickNode,
+                ClickCenter,
+                Click,
+                LongClickNode,
+                LongClickCenter,
+                LongClick,
+                Back,
+            )
         }
 
         fun getAction(action: String?): ActionPerformer {
